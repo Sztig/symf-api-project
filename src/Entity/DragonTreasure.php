@@ -3,10 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
@@ -18,38 +19,48 @@ use App\Repository\DragonTreasureRepository;
 use Carbon\Carbon;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Attribute\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 use function Symfony\Component\String\u;
 
 #[ORM\Entity(repositoryClass: DragonTreasureRepository::class)]
 #[ApiResource(
     shortName: 'Treasure',
-    description: 'Rare treasure',
+    description: 'A rare and valuable treasure.',
     operations: [
         new Get(
-            normalizationContext: ['groups' => ['treasure:read', 'treasure:item:get']]
+            normalizationContext: [
+                'groups' => ['treasure:read', 'treasure:item:get'],
+            ],
         ),
         new GetCollection(),
-        new Post(),
-        new Put(),
-        new Patch()
+        new Post(security: 'is_granted("ROLE_TREASURE_CREATE")'),
+        new Patch(
+            security: 'is_granted("ROLE_TREASURE_EDIT") and object.getOwner() == user',
+            securityPostDenormalize: 'object.getOwner() == user'
+        ),
+        new Delete(
+            security: 'is_granted("ROLE_ADMIN")'
+        )
     ],
     formats: [
         'jsonld',
         'json',
         'html',
         'jsonhal',
-        'csv' => 'text/csv'
+        'csv' => 'text/csv',
     ],
     normalizationContext: [
-        'groups' => 'treasure:read'
+        'groups' => ['treasure:read'],
     ],
     denormalizationContext: [
-        'groups' => 'treasure:write'
+        'groups' => ['treasure:write'],
     ],
-    paginationItemsPerPage: 10
+    paginationItemsPerPage: 10,
+    extraProperties: [
+        'standard_put' => true,
+    ]
 )]
 #[ApiResource(
     uriTemplate: '/users/{user_id}/treasures.{_format}',
@@ -59,14 +70,19 @@ use function Symfony\Component\String\u;
         'user_id' => new Link(
             fromProperty: 'dragonTreasures',
             fromClass: User::class,
-        )
+        ),
     ],
     normalizationContext: [
-        'groups' => ['treasure:read']
+        'groups' => ['treasure:read'],
     ],
+    extraProperties: [
+        'standard_put' => true,
+    ]
 )]
 #[ApiFilter(PropertyFilter::class)]
-#[ApiFilter(SearchFilter::class, properties: ['owner.username' => 'partial'])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'owner.username' => 'partial',
+])]
 class DragonTreasure
 {
     #[ORM\Id]
@@ -83,11 +99,12 @@ class DragonTreasure
 
     #[ORM\Column(type: Types::TEXT)]
     #[Groups(['treasure:read'])]
+    #[ApiFilter(SearchFilter::class, strategy: 'partial')]
     #[Assert\NotBlank]
     private ?string $description = null;
 
     /**
-     * The estimated value of this treasure, in gold coins
+     * The estimated value of this treasure, in gold coins.
      */
     #[ORM\Column]
     #[Groups(['treasure:read', 'treasure:write', 'user:read', 'user:write'])]
@@ -96,17 +113,17 @@ class DragonTreasure
     private ?int $value = 0;
 
     #[ORM\Column]
-    #[Groups(['treasure:read', 'treasure:write', 'user:read'])]
+    #[Groups(['treasure:read', 'treasure:write'])]
     #[Assert\GreaterThanOrEqual(0)]
     #[Assert\LessThanOrEqual(10)]
     private ?int $coolFactor = 0;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $plunderedAt = null;
+    private \DateTimeImmutable $plunderedAt;
 
     #[ORM\Column]
     #[ApiFilter(BooleanFilter::class)]
-    private ?bool $isPublished = false;
+    private bool $isPublished = false;
 
     #[ORM\ManyToOne(inversedBy: 'dragonTreasures')]
     #[ORM\JoinColumn(nullable: false)]
@@ -115,10 +132,10 @@ class DragonTreasure
     #[ApiFilter(SearchFilter::class, strategy: 'exact')]
     private ?User $owner = null;
 
-    public function __construct($name = null)
+    public function __construct(string $name = null)
     {
-        $this->plunderedAt = new \DateTimeImmutable();
         $this->name = $name;
+        $this->plunderedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -137,9 +154,25 @@ class DragonTreasure
     }
 
     #[Groups(['treasure:read'])]
-    public function getShortDescription(): ?string
+    public function getShortDescription(): string
     {
-        return u($this->description)->truncate(40, '...');
+        return u($this->getDescription())->truncate(40, '...');
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    #[SerializedName('description')]
+    #[Groups(['treasure:write', 'user:write'])]
+    public function setTextDescription(string $description): self
+    {
+        $this->description = nl2br($description);
+
+        return $this;
     }
 
     public function getValue(): ?int
@@ -147,7 +180,7 @@ class DragonTreasure
         return $this->value;
     }
 
-    public function setValue(int $value): static
+    public function setValue(int $value): self
     {
         $this->value = $value;
 
@@ -159,7 +192,7 @@ class DragonTreasure
         return $this->coolFactor;
     }
 
-    public function setCoolFactor(int $coolFactor): static
+    public function setCoolFactor(int $coolFactor): self
     {
         $this->coolFactor = $coolFactor;
 
@@ -171,43 +204,30 @@ class DragonTreasure
         return $this->plunderedAt;
     }
 
-    public function getIsPublished(): ?bool
+    public function setPlunderedAt(\DateTimeImmutable $plunderedAt): self
     {
-        return $this->isPublished;
-    }
-
-    public function setIsPublished(bool $isPublished): static
-    {
-        $this->isPublished = $isPublished;
+        $this->plunderedAt = $plunderedAt;
 
         return $this;
     }
 
-    #[Groups(['treasure:write', 'user:write'])]
-    #[SerializedName('description')]
-    public function setTextDescription(string $description): static
-    {
-        $this->description = nl2br($description);
-
-        return $this;
-    }
-
+    /**
+     * A human-readable representation of when this treasure was plundered.
+     */
     #[Groups(['treasure:read'])]
     public function getPlunderedAtAgo(): string
     {
         return Carbon::instance($this->plunderedAt)->diffForHumans();
     }
 
-    public function setDescription(string $description): self
+    public function getIsPublished(): bool
     {
-        $this->description = $description;
-
-        return $this;
+        return $this->isPublished;
     }
 
-    public function setPlunderedAt(\DateTimeImmutable $plunderedAt): self
+    public function setIsPublished(bool $isPublished): self
     {
-        $this->plunderedAt = $plunderedAt;
+        $this->isPublished = $isPublished;
 
         return $this;
     }
@@ -217,7 +237,7 @@ class DragonTreasure
         return $this->owner;
     }
 
-    public function setOwner(?User $owner): static
+    public function setOwner(?User $owner): self
     {
         $this->owner = $owner;
 

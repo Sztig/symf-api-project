@@ -21,28 +21,46 @@ class DragonTreasureRepository extends ServiceEntityRepository
         parent::__construct($registry, DragonTreasure::class);
     }
 
-    //    /**
-    //     * @return DragonTreasure[] Returns an array of DragonTreasure objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('d.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function save(DragonTreasure $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
 
-    //    public function findOneBySomeField($value): ?DragonTreasure
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(DragonTreasure $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+//    /**
+//     * @return DragonTreasure[] Returns an array of DragonTreasure objects
+//     */
+//    public function findByExampleField($value): array
+//    {
+//        return $this->createQueryBuilder('d')
+//            ->andWhere('d.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->orderBy('d.id', 'ASC')
+//            ->setMaxResults(10)
+//            ->getQuery()
+//            ->getResult()
+//        ;
+//    }
+
+//    public function findOneBySomeField($value): ?DragonTreasure
+//    {
+//        return $this->createQueryBuilder('d')
+//            ->andWhere('d.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->getQuery()
+//            ->getOneOrNullResult()
+//        ;
+//    }
 }
