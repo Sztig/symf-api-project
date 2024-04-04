@@ -6,6 +6,7 @@ use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -37,8 +38,8 @@ use function Symfony\Component\String\u;
         new GetCollection(),
         new Post(security: 'is_granted("ROLE_TREASURE_CREATE")'),
         new Patch(
-            security: 'is_granted("ROLE_TREASURE_EDIT") and object.getOwner() == user',
-            securityPostDenormalize: 'object.getOwner() == user'
+            security: 'is_granted("EDIT", object)',
+            securityPostDenormalize: 'is_granted("EDIT", object)'
         ),
         new Delete(
             security: 'is_granted("ROLE_ADMIN")'
@@ -123,6 +124,10 @@ class DragonTreasure
 
     #[ORM\Column]
     #[ApiFilter(BooleanFilter::class)]
+    #[Groups(['treasure:read', 'treasure:write'])]
+    #[ApiProperty(
+        security: 'is_granted("EDIT", object),'
+    )]
     private bool $isPublished = false;
 
     #[ORM\ManyToOne(inversedBy: 'dragonTreasures')]

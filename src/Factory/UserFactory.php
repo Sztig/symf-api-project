@@ -85,4 +85,14 @@ final class UserFactory extends ModelFactory
     {
         return User::class;
     }
+
+    public function withRoles(array $roles): self
+    {
+        return $this->addState(['roles' => $roles]);
+    }
+
+    public function asAdmin(): self
+    {
+        return $this->withRoles(['ROLE_ADMIN']);
+    }
 }
