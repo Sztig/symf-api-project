@@ -14,10 +14,14 @@ class MainController extends AbstractController
     #[Route('/')]
     public function homepage(NormalizerInterface $normalizer, #[CurrentUser] User $user = null): Response
     {
-        return $this->render('main/homepage.html.twig', [
-            'userData' => $normalizer->normalize($user, 'jsonld', [
+        return $this->render(
+            'main/homepage.html.twig', [
+            'userData' => $normalizer->normalize(
+                $user, 'jsonld', [
                 'groups' => ['user:read']
-            ])
-        ]);
+                ]
+            )
+            ]
+        );
     }
 }

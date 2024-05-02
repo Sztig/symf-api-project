@@ -13,8 +13,7 @@ class AdminGroupsContextBuilder implements SerializerContextBuilderInterface
     public function __construct(
         private SerializerContextBuilderInterface $serializerContextBuilder,
         private Security $security
-    )
-    {
+    ) {
     }
 
     public function createFromRequest(Request $request, bool $normalization, array $extractedAttributes = null): array

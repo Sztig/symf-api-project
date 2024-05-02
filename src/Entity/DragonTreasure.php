@@ -17,6 +17,8 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Serializer\Filter\PropertyFilter;
 use App\Repository\DragonTreasureRepository;
+use App\State\DragonTreasureStateProcessor;
+use App\State\DragonTreasureStateProvider;
 use App\Validator\IsValidOwner;
 use Carbon\Carbon;
 use Doctrine\DBAL\Types\Types;
@@ -37,9 +39,13 @@ use function Symfony\Component\String\u;
             ],
         ),
         new GetCollection(),
-        new Post(security: 'is_granted("ROLE_TREASURE_CREATE")'),
+        new Post(
+            security: 'is_granted("ROLE_TREASURE_CREATE")',
+            processor: DragonTreasureStateProcessor::class,
+        ),
         new Patch(
             security: 'is_granted("EDIT", object)',
+            processor: DragonTreasureStateProcessor::class,
         ),
         new Delete(
             security: 'is_granted("ROLE_ADMIN")'
@@ -59,6 +65,7 @@ use function Symfony\Component\String\u;
         'groups' => ['treasure:write'],
     ],
     paginationItemsPerPage: 10,
+    provider: DragonTreasureStateProvider::class,
     extraProperties: [
         'standard_put' => true,
     ]
@@ -81,9 +88,11 @@ use function Symfony\Component\String\u;
     ]
 )]
 #[ApiFilter(PropertyFilter::class)]
-#[ApiFilter(SearchFilter::class, properties: [
+#[ApiFilter(
+    SearchFilter::class, properties: [
     'owner.username' => 'partial',
-])]
+    ]
+)]
 class DragonTreasure
 {
     #[ORM\Id]
@@ -124,7 +133,7 @@ class DragonTreasure
 
     #[ORM\Column]
     #[ApiFilter(BooleanFilter::class)]
-    #[Groups(['admin:read', 'admin:write', 'owner:read'])]
+    #[Groups(['admin:read', 'admin:write', 'owner:read', 'treasure:write'])]
     private bool $isPublished = false;
 
     #[ORM\ManyToOne(inversedBy: 'dragonTreasures')]
@@ -134,6 +143,11 @@ class DragonTreasure
     #[IsValidOwner]
     #[ApiFilter(SearchFilter::class, strategy: 'exact')]
     private ?User $owner = null;
+
+    /**
+     * @var bool Non-persisted prop
+     */
+    private bool $isOwnedByAuthenticatedUser;
 
     public function __construct(string $name = null)
     {
@@ -245,5 +259,21 @@ class DragonTreasure
         $this->owner = $owner;
 
         return $this;
+    }
+
+    #[Groups(['treasure:read'])]
+    #[SerializedName('isMine')]
+    public function isOwnedByAuthenticatedUser(): bool
+    {
+        if (!isset($this->isOwnedByAuthenticatedUser)) {
+            throw new \LogicException('You must call setIsOwnedByAuthenticatedUser() before isOwnedByAuthenticatedUser()');
+        }
+
+        return $this->isOwnedByAuthenticatedUser;
+    }
+
+    public function setIsOwnedByAuthenticatedUser(bool $isOwnedByAuthenticatedUser): void
+    {
+        $this->isOwnedByAuthenticatedUser = $isOwnedByAuthenticatedUser;
     }
 }

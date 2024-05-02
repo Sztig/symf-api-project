@@ -12,8 +12,7 @@ class TreasuresAllowedOwnerChangeValidator extends ConstraintValidator
 {
     public function __construct(
         private EntityManagerInterface $entityManager
-    )
-    {
+    ) {
     }
 
     public function validate($value, Constraint $constraint)
@@ -35,7 +34,7 @@ class TreasuresAllowedOwnerChangeValidator extends ConstraintValidator
             $originalOwnerId = $originalData['owner_id'];
             $newOwnerId = $dragonTreasure->getOwner()->getId();
 
-            if (!$originalOwnerId || $originalOwnerId === $newOwnerId){
+            if (!$originalOwnerId || $originalOwnerId === $newOwnerId) {
                 return;
             }
 

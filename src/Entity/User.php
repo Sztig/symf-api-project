@@ -143,8 +143,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        if ($this->accessTokenScopes === null)
-        {
+        if ($this->accessTokenScopes === null) {
             $roles = $this->roles;
             $roles[] = 'ROLE_FULL_USER';
         } else {
@@ -212,9 +211,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[SerializedName('dragonTreasures')]
     public function getPublicDragonTreasures(): Collection
     {
-        return $this->dragonTreasures->filter(static function (DragonTreasure $dragonTreasure) {
-            return $dragonTreasure->getIsPublished();
-        });
+        return $this->dragonTreasures->filter(
+            static function (DragonTreasure $dragonTreasure) {
+                return $dragonTreasure->getIsPublished();
+            }
+        );
     }
 
     public function addDragonTreasure(DragonTreasure $treasure): self
@@ -277,8 +278,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->getApiTokens()
             ->filter(fn (ApiToken $token) => $token->isValid())
             ->map(fn (ApiToken $token) => $token->getToken())
-            ->toArray()
-            ;
+            ->toArray();
     }
 
     public function markAsTokenAuthenticated(array $scopes): void

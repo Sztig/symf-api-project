@@ -6,6 +6,7 @@ use App\Entity\ApiToken;
 use App\Entity\User;
 use App\Factory\ApiTokenFactory;
 use App\Factory\DragonTreasureFactory;
+use App\Factory\NotificationFactory;
 use App\Factory\UserFactory;
 use Zenstruck\Foundry\Test\ResetDatabase;
 
@@ -38,6 +39,7 @@ class DragonTreasuresResourceTest extends ApiTestCase
             'owner',
             'shortDescription',
             'plunderedAtAgo',
+            'isMine'
         ]);
     }
 
@@ -226,5 +228,26 @@ class DragonTreasuresResourceTest extends ApiTestCase
             ->assertJsonMatches('isPublished', true)
             ->assertJsonMatches('isMine', true)
         ;
+    }
+
+    public function testPublishTreasure(): void
+    {
+        $user = UserFactory::new()->create();
+        $treasure = DragonTreasureFactory::createOne([
+            'isPublished' => false,
+            'owner' => $user,
+        ]);
+        $this->browser()
+            ->actingAs($user)
+            ->patch('/api/treasures/'.$treasure->getId(), [
+                'json' => [
+                    'isPublished' => true,
+                ],
+            ])
+            ->assertStatus(200)
+            ->assertJsonMatches('isPublished', true)
+        ;
+
+        NotificationFactory::repository()->assert()->count(1);
     }
 }

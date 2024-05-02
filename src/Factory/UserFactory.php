@@ -12,7 +12,7 @@ use Zenstruck\Foundry\RepositoryProxy;
 /**
  * @extends ModelFactory<User>
  *
- * @method        User|Proxy create(array|callable $attributes = [])
+ * @method User|Proxy create(array|callable $attributes = [])
  * @method static User|Proxy createOne(array $attributes = [])
  * @method static User|Proxy find(object|array|mixed $criteria)
  * @method static User|Proxy findOrCreate(array $attributes)
@@ -47,8 +47,7 @@ final class UserFactory extends ModelFactory
      */
     public function __construct(
         private UserPasswordHasherInterface $passwordHasher
-    )
-    {
+    ) {
         parent::__construct();
     }
 
@@ -72,13 +71,16 @@ final class UserFactory extends ModelFactory
     protected function initialize(): self
     {
         return $this
-            ->afterInstantiate(function(User $user): void {
-                $user->setPassword($this->passwordHasher->hashPassword(
-                    $user,
-                    $user->getPassword()
-                ));
-            })
-        ;
+            ->afterInstantiate(
+                function (User $user): void {
+                    $user->setPassword(
+                        $this->passwordHasher->hashPassword(
+                            $user,
+                            $user->getPassword()
+                        )
+                    );
+                }
+            );
     }
 
     protected static function getClass(): string

@@ -14,8 +14,7 @@ class DragonTreasureIsPublishedExtension implements QueryCollectionExtensionInte
 {
     public function __construct(
         private Security $security
-    )
-    {
+    ) {
 
     }
 

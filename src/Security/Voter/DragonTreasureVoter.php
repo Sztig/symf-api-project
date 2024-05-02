@@ -14,8 +14,7 @@ class DragonTreasureVoter extends Voter
 
     public function __construct(
         private Security $security
-    )
-    {
+    ) {
 
     }
     protected function supports(string $attribute, mixed $subject): bool
@@ -39,15 +38,15 @@ class DragonTreasureVoter extends Voter
         }
 
         switch ($attribute) {
-            case self::EDIT:
-                if(!$this->security->isGranted('ROLE_TREASURE_EDIT')){
-                    return false;
-                }
+        case self::EDIT:
+            if(!$this->security->isGranted('ROLE_TREASURE_EDIT')) {
+                return false;
+            }
 
-                if($subject->getOwner() === $user){
-                    return true;
-                }
-                break;
+            if($subject->getOwner() === $user) {
+                return true;
+            }
+            break;
         }
 
         return false;

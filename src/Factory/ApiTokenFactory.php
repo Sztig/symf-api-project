@@ -11,7 +11,7 @@ use Zenstruck\Foundry\RepositoryProxy;
 /**
  * @extends ModelFactory<ApiToken>
  *
- * @method        ApiToken|Proxy create(array|callable $attributes = [])
+ * @method ApiToken|Proxy create(array|callable $attributes = [])
  * @method static ApiToken|Proxy createOne(array $attributes = [])
  * @method static ApiToken|Proxy find(object|array|mixed $criteria)
  * @method static ApiToken|Proxy findOrCreate(array $attributes)

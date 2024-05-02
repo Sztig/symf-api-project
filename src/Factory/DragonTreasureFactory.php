@@ -11,7 +11,7 @@ use Zenstruck\Foundry\RepositoryProxy;
 /**
  * @extends ModelFactory<DragonTreasure>
  *
- * @method        DragonTreasure|Proxy create(array|callable $attributes = [])
+ * @method DragonTreasure|Proxy create(array|callable $attributes = [])
  * @method static DragonTreasure|Proxy createOne(array $attributes = [])
  * @method static DragonTreasure|Proxy find(object|array|mixed $criteria)
  * @method static DragonTreasure|Proxy findOrCreate(array $attributes)

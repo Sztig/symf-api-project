@@ -15,8 +15,7 @@ class AddOwnerGroupsNormalizer implements NormalizerInterface, SerializerAwareIn
     public function __construct(
         private NormalizerInterface $normalizer,
         private Security $security
-    )
-    {
+    ) {
     }
 
     public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
@@ -25,13 +24,7 @@ class AddOwnerGroupsNormalizer implements NormalizerInterface, SerializerAwareIn
             $context['groups'][] = 'owner:read';
         }
 
-        $normalized = $this->normalizer->normalize($object, $format, $context);
-
-        if ($object instanceof DragonTreasure && $this->security->getUser() === $object->getOwner()) {
-            $normalized['isMine'] = true;
-        }
-
-        return $normalized;
+        return $this->normalizer->normalize($object, $format, $context);
     }
 
     public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
