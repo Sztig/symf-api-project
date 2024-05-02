@@ -147,7 +147,7 @@ class DragonTreasure
     /**
      * @var bool Non-persisted prop
      */
-    private bool $isOwnedByAuthenticatedUser;
+    private bool $isOwnedByAuthenticatedUser = false;
 
     public function __construct(string $name = null)
     {
