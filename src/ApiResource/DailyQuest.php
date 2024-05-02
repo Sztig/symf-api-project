@@ -9,7 +9,7 @@ use App\State\DailyQuestStateProvider;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ApiResource(
-    shortName: 'quests',
+    shortName: 'Quests',
     provider: DailyQuestStateProvider::class
 )]
 class DailyQuest
