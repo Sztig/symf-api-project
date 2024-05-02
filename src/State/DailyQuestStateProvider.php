@@ -4,19 +4,20 @@ namespace App\State;
 
 use ApiPlatform\Metadata\CollectionOperationInterface;
 use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\Pagination\Pagination;
+use ApiPlatform\State\Pagination\TraversablePaginator;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\DailyQuest;
 use App\ApiResource\QuestTreasure;
-use App\Entity\DragonTreasure;
 use App\Enum\DailyQuestStatusEnum;
 use App\Repository\DragonTreasureRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 
 class DailyQuestStateProvider implements ProviderInterface
 {
     public function __construct(
-        private DragonTreasureRepository $treasureRepository
+        private DragonTreasureRepository $treasureRepository,
+        private Pagination $pagination
     )
     {
     }
@@ -27,10 +28,22 @@ class DailyQuestStateProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         if($operation instanceof CollectionOperationInterface) {
-            return $this->createQuests();
+            $currentPage = $this->pagination->getPage($context);
+            $itemsPerPage = $this->pagination->getLimit($operation, $context);
+            $offset = $this->pagination->getOffset($operation, $context);
+            $totalItems = $this->countTotalQuests();
+
+            $quest = $this->createQuests($offset, $itemsPerPage);
+
+            return new TraversablePaginator(
+                new \ArrayIterator($quest),
+                $currentPage,
+                $itemsPerPage,
+                $totalItems
+            );
         }
 
-        $quests = $this->createQuests();
+        $quests = $this->createQuests(0, 50);
 
         return $quests[$uriVariables['dayString']] ?? null;
     }
@@ -38,12 +51,12 @@ class DailyQuestStateProvider implements ProviderInterface
     /**
      * @throws Exception
      */
-    private function createQuests(): array
+    private function createQuests(int $offset, int $limit): array
     {
         $treasures = $this->treasureRepository->findBy([], [], 10 );
 
         $quests = [];
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = $offset; $i < ($offset + $limit); $i++) {
             $quest = new DailyQuest(new \DateTimeImmutable(sprintf('- %d days', $i)));
             $quest->questName = sprintf('Quest %d', $i);
             $quest->description = sprintf('Description %d', $i);
@@ -60,5 +73,10 @@ class DailyQuestStateProvider implements ProviderInterface
             $quests[$quest->getDayString()] = $quest;
         }
         return $quests;
+    }
+
+    private function countTotalQuests(): int
+    {
+        return 50;
     }
 }
