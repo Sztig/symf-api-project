@@ -13,13 +13,14 @@ class UserResourceTest extends ApiTestCase
     public function testPostToCreateUser(): void
     {
         $this->browser()
-            ->request('POST', '/api/users', [
+            ->post( '/api/users', [
                 'json' => [
                     'email' => 'test@test.com',
                     'password' => 'password',
                     'username' => 'test',
                 ]
             ])
+            ->dump()
             ->assertStatus(201)
             ->post('/login', [
                 'email' => 'test@test.com',
