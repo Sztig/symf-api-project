@@ -9,17 +9,15 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\UserApi;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfonycasts\MicroMapper\MicroMapperInterface;
 
 class EntityClassDtoStateProcessor implements ProcessorInterface
 {
     public function __construct(
-        private UserRepository $userRepository,
         #[Autowire(service: PersistProcessor::class)]private PersistProcessor $persistProcessor,
         #[Autowire(service: RemoveProcessor::class)]private RemoveProcessor $removeProcessor,
-        private UserPasswordHasherInterface $userPasswordHasher
+        private MicroMapperInterface $microMapper
     )
     {
     }
@@ -44,25 +42,6 @@ class EntityClassDtoStateProcessor implements ProcessorInterface
 
     private function mapDtoToEntity(object $dto): object
     {
-        assert($dto instanceof UserApi);
-        if ($dto->id) {
-            $entity = $this->userRepository->find($dto->id);
-
-            if (!$entity) {
-                throw new \Exception(sprintf('Entity with id %s not found', $dto->id));
-            }
-        } else {
-            $entity = new User();
-        }
-
-        $entity->setEmail($dto->email);
-        $entity->setUsername($dto->username);
-
-        if($dto->password){
-            $entity->setPassword($this->userPasswordHasher->hashPassword($entity, $dto->password));
-        }
-
-        // TODO: handle dragon treasures
-        return $entity;
+        return $this->microMapper->map($dto, User::class);
     }
 }
