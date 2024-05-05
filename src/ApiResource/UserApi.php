@@ -12,7 +12,6 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
-use App\Entity\DragonTreasure;
 use App\Entity\User;
 use App\State\EntityClassDtoStateProcessor;
 use App\State\EntityToDtoStateProvider;
@@ -20,7 +19,7 @@ use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 #[ApiResource(
-    shortName: 'user',
+    shortName: 'User',
     operations: [
         new Get(),
         new GetCollection(),
@@ -64,7 +63,7 @@ class UserApi
     public ?string $password = null;
 
     /**
-     * @var array<DragonTreasure>
+     * @var array<DragonTreasureApi>
      */
     #[ApiProperty(writable: false)]
     public array $dragonTreasures = [];
